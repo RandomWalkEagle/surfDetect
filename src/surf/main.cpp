@@ -14,6 +14,7 @@
 #include <ctime>
 #include <iostream>
 #include "QString"
+#include "cvaux.hpp"
 
 //-------------------------------------------------------
 // In order to you use OpenSURF, the following illustrates
@@ -36,7 +37,7 @@ int mainImage(IplImage *img)
 
   // Detect and describe interest points in the image
   clock_t start = clock();
-  surfDetDes(img, ipts, false, 5, 4, 2, 0.0004f); 
+  surfDetDes(img, ipts, true, 5, 4, 2, 0.01f); 
   clock_t end = clock();
 
   std::cout<< "OpenSURF found: " << ipts.size() << " interest points" << std::endl;
@@ -237,8 +238,8 @@ int mainStaticMatch( IplImage *img1, IplImage *img2)
   clock_t start = clock();
   //surfDetDes(img1,ipts1,false,4,4,2,0.0001f);
   //surfDetDes(img2,ipts2,false,4,4,2,0.0001f);
-  surfDetDes(img1,ipts1,false,4,4,2,0.01f);
-  surfDetDes(img2,ipts2,false,4,4,2,0.01f);
+  surfDetDes(img1,ipts1,true,4,4,2,0.0001f);
+  surfDetDes(img2,ipts2,true,4,4,2,0.0001f);
   clock_t end = clock();
 
   std::cout<< "OpenSURF found: " << ipts1.size() << " interest points in first image" << std::endl;
@@ -324,10 +325,10 @@ int main()
 {
 	//printDoc();
 	//mainImage(cvLoadImage("../imgs/sf.jpg"));
-	IplImage *img1 = cvLoadImage("../imgs/YY00.png");
-	IplImage *img2 = cvLoadImage("../imgs/YY11.png");
+	IplImage *img1 = cvLoadImage("../imgs/YY44.png");
+	IplImage *img2 = cvLoadImage("../imgs/YY55.png");
 
-	double scale = 0.15;
+	double scale = 0.2;
 	CvSize sz;
 	sz.height = img1->height * scale;
 	sz.width = img1->width * scale;
@@ -349,7 +350,8 @@ int main()
 
 	std::cout<< "Smooth took: " << float(end - start) / CLOCKS_PER_SEC  << " seconds" << std::endl;
 
-	mainStaticMatch( imgA1 , imgA2);
+	mainImage(imgA1);
+	//mainStaticMatch( imgA1 , imgA2);
 	return 0;
 /*
   if (PROCEDURE == 1) return mainImage();

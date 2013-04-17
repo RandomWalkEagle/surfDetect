@@ -12,7 +12,7 @@
 #include "utils.h"
 
 #include "surf.h"
-#include "calTime.h"
+#include "../calTime.h"
 
 //-------------------------------------------------------
 //! SURF priors (these need not be done at runtime)
