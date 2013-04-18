@@ -328,7 +328,7 @@ int main()
 	IplImage *img1 = cvLoadImage("../imgs/YY44.png");
 	IplImage *img2 = cvLoadImage("../imgs/YY55.png");
 
-	double scale = 0.2;
+	double scale = 0.4;
 	CvSize sz;
 	sz.height = img1->height * scale;
 	sz.width = img1->width * scale;
@@ -350,8 +350,8 @@ int main()
 
 	std::cout<< "Smooth took: " << float(end - start) / CLOCKS_PER_SEC  << " seconds" << std::endl;
 
-	mainImage(imgA1);
-	//mainStaticMatch( imgA1 , imgA2);
+	//mainImage(imgA1);
+	mainStaticMatch( imgA1 , imgA2);
 	return 0;
 /*
   if (PROCEDURE == 1) return mainImage();

@@ -18,12 +18,11 @@ int main(int argc, char* argv[])
 	const char OutFileName[] = "../imgs/YY00After.png";
 	const char InFileName[] = "../imgs/YY00.png";
 
-	int inFASTThreshhold = 150;
+	int inFASTThreshhold = 100;//·¶Î§[0-250]
 	int inNpixels = 9;
 	int inModeCrossesVsList = 1;
 	int inNonMaxSuppression  = 0;
-
-
+   
 //	int numRemainingArgs = numArgs - 3;
 
 // 	if( numArgs <=2 ) {
@@ -78,17 +77,23 @@ int main(int argc, char* argv[])
 	IplImage* I_in = cvLoadImage( InFileName, -1 );
 	IplImage* IGray = cvCreateImage( cvGetSize( I_in ), IPL_DEPTH_8U, 1);
 	cvCvtColor( I_in, IGray, CV_RGB2GRAY );
+	CvSize size = cvGetSize( IGray );
+	const float scale = 0.3;
+	size.width = size.width * scale;
+	size.height = size.height * scale;
+	IplImage *imgA2 = cvCreateImage(size, IGray->depth, IGray->nChannels);
+	cvResize(IGray, imgA2, CV_INTER_LINEAR);
 
 	CvPoint* corners;
 	int numCorners;
 	
-	cvCornerFast(IGray, inFASTThreshhold, inNpixels, inNonMaxSuppression, &numCorners, & corners);
+	cvCornerFast(imgA2, inFASTThreshhold, inNpixels, inNonMaxSuppression, &numCorners, & corners);
 
 	
 	if ( inModeCrossesVsList == 1 ) 
 	{
 		// Put they grey image in to a colour buffer and draw on it
-		cvCvtColor( IGray, I_in, CV_GRAY2RGB );	// Instead of iplColorToGray( Icanvas, IcanvasGray );
+		cvCvtColor( imgA2, I_in, CV_GRAY2RGB );	// Instead of iplColorToGray( Icanvas, IcanvasGray );
 		for(int i=0; i < numCorners; i++ ) 
 		{
 			cvLine( I_in, 
