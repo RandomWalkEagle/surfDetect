@@ -13,6 +13,7 @@
 #include "kmeans.h"
 #include <ctime>
 #include <iostream>
+#include <windows.h>
 #include "QString"
 #include "cvaux.hpp"
 
@@ -235,22 +236,24 @@ int mainStaticMatch( IplImage *img1, IplImage *img2)
 
   IpVec ipts1, ipts2;
 
-  clock_t start = clock();
+  LARGE_INTEGER llPerfCount = {0};
+  QueryPerformanceCounter(&llPerfCount);
+  __int64 beginPerfCount = llPerfCount.QuadPart;
+
   //surfDetDes(img1,ipts1,false,4,4,2,0.0001f);
   //surfDetDes(img2,ipts2,false,4,4,2,0.0001f);
   surfDetDes(img1,ipts1,true,4,4,2,0.0001f);
   surfDetDes(img2,ipts2,true,4,4,2,0.0001f);
-  clock_t end = clock();
-
-  std::cout<< "OpenSURF found: " << ipts1.size() << " interest points in first image" << std::endl;
-  std::cout<< "OpenSURF found: " << ipts2.size() << " interest points in second image" << std::endl;
-  std::cout<< "OpenSURF took: " << float(end - start) / CLOCKS_PER_SEC  << " seconds" << std::endl;
 
   IpPairVec matches;
-  start = clock();
   getMatches(ipts1,ipts2,matches);
-  end = clock();
-  std::cout<< "Matches took: " << float(end - start) / CLOCKS_PER_SEC  << " seconds" << std::endl;
+
+  QueryPerformanceCounter(&llPerfCount);
+  __int64 endPerfCount = llPerfCount.QuadPart;
+  LARGE_INTEGER liPerfFreq={0};
+  QueryPerformanceFrequency(&liPerfFreq);
+  std::cout << __FUNCTION__ << " excute time: " 
+	  <<  float(endPerfCount - beginPerfCount) * 1000 / liPerfFreq.QuadPart  << " millisecond(ºÁÃë)" << std::endl;
 
   for (unsigned int i = 0; i < matches.size(); ++i)
   {
@@ -325,10 +328,10 @@ int main()
 {
 	//printDoc();
 	//mainImage(cvLoadImage("../imgs/sf.jpg"));
-	IplImage *img1 = cvLoadImage("../imgs/YY44.png");
-	IplImage *img2 = cvLoadImage("../imgs/YY55.png");
+	IplImage *img1 = cvLoadImage("../imgs/YY66.png");
+	IplImage *img2 = cvLoadImage("../imgs/YY77.png");
 
-	double scale = 0.4;
+	double scale = 0.07;
 	CvSize sz;
 	sz.height = img1->height * scale;
 	sz.width = img1->width * scale;
