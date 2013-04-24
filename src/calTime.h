@@ -10,6 +10,7 @@ public:
 		LARGE_INTEGER llPerfCount = {0};
 		QueryPerformanceCounter(&llPerfCount);
 		m_llBeginPerfCount = llPerfCount.QuadPart;
+		fucName = name;
 	}
 	~calTime(){
 		LARGE_INTEGER llPerfCount = {0};
@@ -19,7 +20,7 @@ public:
 		LARGE_INTEGER liPerfFreq={0};
 		QueryPerformanceFrequency(&liPerfFreq);
 
-		std::cout << fucName << " excute time: " 
+		std::cout << "Function " << fucName << " excute time: " 
 		<<  float(m_llEndPerfCount - m_llBeginPerfCount) * 1000 / liPerfFreq.QuadPart  << " millisecond(ºÁÃë)" << std::endl;
 	}
 

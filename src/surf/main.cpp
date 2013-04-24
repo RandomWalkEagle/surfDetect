@@ -354,7 +354,8 @@ int main()
 	std::cout<< "Smooth took: " << float(end - start) / CLOCKS_PER_SEC  << " seconds" << std::endl;
 
 	//mainImage(imgA1);
-	mainStaticMatch( imgA1 , imgA2);
+	//mainStaticMatch( imgA1 , imgA2);
+	mainKmeans();
 	return 0;
 /*
   if (PROCEDURE == 1) return mainImage();

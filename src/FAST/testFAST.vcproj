@@ -24,6 +24,7 @@
 				AssemblerListingLocation="debug\"
 				BufferSecurityCheck="false"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4996,4819"
 				ExceptionHandling="1"
 				GeneratePreprocessedFile="0"
 				ObjectFile="debug\"
@@ -77,6 +78,7 @@
 				AssemblerListingLocation="release\"
 				BufferSecurityCheck="false"
 				DebugInformationFormat="0"
+				DisableSpecificWarnings="4996,4819"
 				ExceptionHandling="1"
 				GeneratePreprocessedFile="0"
 				ObjectFile="release\"
@@ -124,6 +126,8 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath="corner.cpp" />
+			<File
 				RelativePath="cv_fast_10.cpp" />
 			<File
 				RelativePath="cv_fast_11.cpp" />
@@ -141,7 +145,13 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath="corner.h" />
+			<File
 				RelativePath="cvfast.h" />
+			<File
+				RelativePath="drawCorner.h" />
+			<File
+				RelativePath="match.h" />
 		</Filter>
 	</Files>
 	<Globals>

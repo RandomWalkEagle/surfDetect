@@ -9,6 +9,12 @@ INCLUDEPATH += ../calTime.h
 QMAKE_LIBDIR += "$(TargetDir)"
 
 CONFIG += console
+CONFIG += qt warn_on
+
+#win32-msvc* {
+QMAKE_CXXFLAGS += /wd4996 /wd4819
+#}
+
 DESTDIR=../../Bin/debug 
 
 CONFIG(debug, debug|release) {
@@ -32,9 +38,14 @@ LIBS += ../../opencv/lib/highgui210d.lib
 
 # header files
 HEADERS += cvfast.h
+HEADERS += drawCorner.h
+HEADERS += corner.h
+HEADERS += match.h
+
 
 # source files
 SOURCES += cvfast.cpp
+SOURCES += corner.cpp
 SOURCES += cv_fast_9.cpp
 SOURCES += cv_fast_10.cpp
 SOURCES += cv_fast_11.cpp
