@@ -11,8 +11,8 @@
 const float KSCALE = 0.125*2;//change
 const int KFASTTHRESHHOLD = 180;//范围[0-250]
 const int KNPIXELS = 11;
-const char fileOne[] = "../imgs/YY100.png";
-const char fileTwo[] = "../imgs/YY101.png";
+const char fileOne[] = "../imgs/YY102.png";
+const char fileTwo[] = "../imgs/YY103.png";
 
 IplImage *scaleImage(IplImage* image, float scale = KSCALE)
 {
@@ -44,7 +44,6 @@ void geneCorners(CvPoint* cornersPos, int numCorners, Corners& corners)
 
 void processImage(IplImage* I_inOrigin,Corners& corners)
 {
-	int inNpixels = 11;
 	int inNonMaxSuppression  = 0;
 	CvPoint* cornersPos;
 	 int numCorners;
@@ -81,18 +80,27 @@ void mergeImage(IplImage* image1, IplImage* image2)
 	cv::imshow("Result",doubleImage);
 }
 /*
-		1、缩小分辨率，计算出缩小图像的特征点;
+算法描述：
+		1、缩小分辨率，利用FAST算法计算出缩小图像的特征点;
 		2、放大分辨率，特征点位置映射回源图像;
 		3、在源图像做如下匹配算法：
 				(1)根据X、Y值做粗略匹配;
-				(2)对粗略匹配结果进行聚类分析;
-				(3)对粗略匹配结果进行分类：
-				可能有用的方法：（根据X[最小值---->最大值],Y[最小值---->最大值]算出来粗略矩阵表示该物体）
-					a、X、Y相同，表示该特征物体没有变动;
-					b、X、Y不相同，表示该特征物体变动了;
+				(2)去除不匹配的噪声焦点；
+				(3)对粗略匹配结果进行分类：(半径为3取元素值)
+					A类：X、Y相同; (shift = 0, decription = 0)
+					B类：X相同，Y不同;
+						分类方法：按Y值偏移值进行归类，取每个类别的第一个进行精确匹配：（5领域进行逐像素匹配）
+						B1类：如果匹配，该类匹配；(shift != 0, decription != 0)
+						B2类：如果不匹配，抛弃该类. (shift = 0, decription = 0)
+					C类：Y相同，X不同；
+						分类方法：按X值偏移值进行归类，取每个类别的第一个进行精确匹配：（5领域进行逐像素匹配）
+						C1类：如果匹配，该类匹配；(shift != 0, decription != 0)
+						C2类：如果不匹配，抛弃该类. (shift != 0, decription != 0)
+				(4) 统计匹配点，对匹配点最多的类型进行矩形计算
 */
 int main()
 {
+	//step(1)、step(2);
 	IplImage* I_inOriginOne = cvLoadImage( fileOne);
 	Corners cornersOne(I_inOriginOne);
 	processImage(I_inOriginOne, cornersOne);
@@ -101,14 +109,19 @@ int main()
 	Corners cornersTwo(I_inOriginTwo);
 	processImage(I_inOriginTwo, cornersTwo);
 
+	//step(3)
 	matchCorners(I_inOriginOne, cornersOne, I_inOriginTwo, cornersTwo);
 
+	//step(4)//delete corners whose description == 0
 	//cornersOne.reduceUselessCorners();
 	//cornersTwo.reduceUselessCorners();
 
-	drawCorners(I_inOriginOne, cornersOne);
-	drawCorners(I_inOriginTwo, cornersTwo);
+	//step(5)
+	drawCorners(I_inOriginOne, cornersOne);// can delete
+	drawCorners(I_inOriginTwo, cornersTwo);// can delete
 
+	cornersOne.calculateSimilarRect();
+	cornersTwo.calculateSimilarRect();
 	drawRect(I_inOriginOne, cornersOne);
 	drawRect(I_inOriginTwo, cornersTwo);
 

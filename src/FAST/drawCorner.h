@@ -62,32 +62,33 @@ void drawCorners(IplImage* image, Corners& corners)
 	int size = corners.getCornerSize();
 	for(int i = 0; i < size; ++i )
 	{
-		CvPoint pos = corners.getCorner(i).getCornerPos();
-		Corner::matchStatus status = corners.getCorner(i).getMatchingStatus();
+		Corner corner = corners.getCorner(i);
+		CvPoint pos = corner.getCornerPos();
+		Corner::matchStatus status = corner.getMatchingStatus();
 		cvLine( image,
 			cvPoint( pos.x-1, pos.y ),
 			cvPoint( pos.x+1, pos.y ),
 			status == Corner::Matched_No ? CV_RGB(0,255,255) : 
-			status == Corner::Matched_X ? CV_RGB(0,0,255) : 
+			status == Corner::Matched_X ? CV_RGB(10*(corner.getDescription()%10+10),15*(corner.getDescription()%10+4),23*(corner.getDescription()%10+2)) : 
 			status == Corner::Matched_Y ? CV_RGB(0,255,0) : CV_RGB(255,0,0),
-			5);
+			6);
 		cvLine( image,
 			cvPoint( pos.x, pos.y-1 ),
 			cvPoint( pos.x, pos.y+1 ),
 			status == Corner::Matched_No ? CV_RGB(0,255,255) : 
-			status == Corner::Matched_X ? CV_RGB(0,0,255) : 
+			status == Corner::Matched_X ? CV_RGB(10*(corner.getDescription()%10+10),15*(corner.getDescription()%10+4),23*(corner.getDescription()%10+2)) : 
 			status == Corner::Matched_Y ? CV_RGB(0,255,0) : CV_RGB(255,0,0),
-			5);
+			6);
 
 		if (status == Corner::Matched_Y)
 		{
 			cvCircle(image, pos, 15.0,
-				CV_RGB(0,255,0));
+				CV_RGB(0,30*(corner.getDescription()%5+5),0));
 			++countY;
 		}else if (status == Corner::Matched_X)
 		{
 			cvCircle(image, pos, 20.0,
-				CV_RGB(0,0,255));
+				CV_RGB(0,0,30*(corner.getDescription()%10+5)));
 			++countX;
 		}else if (status == Corner::Matched_XY)
 		{

@@ -4,7 +4,7 @@
 #include "corner.h"
 #include "../calTime.h"
 
-const int KREGION = 4;//change
+const int KREGION = 5;//change
 
 bool matchPixel(const CvScalar& one, const CvScalar& two)
 {
@@ -12,7 +12,7 @@ bool matchPixel(const CvScalar& one, const CvScalar& two)
 	&& one.val[2] == two.val[2] && one.val[3] == two.val[3];
 }
 
-bool matchCorner(const std::vector<CvScalar>& one,const std::vector<CvScalar>& two)
+bool matchAdjacentPixels(const std::vector<CvScalar>& one,const std::vector<CvScalar>& two)
 {
 	int size = one.size() < two.size() ? one.size() : two.size();
 	if (size == 0 )
@@ -31,42 +31,134 @@ bool matchCorner(const std::vector<CvScalar>& one,const std::vector<CvScalar>& t
 	return true;
 }
 
-void getMinAndMax(Corner& corner, int& minX, int& minY, int& maxX, int& maxY)
+bool matchPreciseCorner(const IplImage* imageOne, Corner& cornerOne,
+						const IplImage* imageTwo, Corner& cornerTwo)
 {
-	CvPoint pos = corner.getCornerPos();
-	if (pos.x < minX)
+	std::vector<CvScalar>& one = cornerOne.getAdjacentPixels(imageOne, KREGION);
+	std::vector<CvScalar>& two = cornerTwo.getAdjacentPixels(imageTwo, KREGION);
+
+	if (matchAdjacentPixels(one, two))
 	{
-		minX = pos.x;
+		return true;
 	}
 
-	if (pos.y < minY)
+	return false;
+}
+
+bool matchCorner(const IplImage* imageOne, Corner& cornerOne, Corners& cornersOne,
+									const IplImage* imageTwo, Corner& cornerTwo, Corners& cornersTwo,
+									int& description)
+{
+	if ( cornerOne.isMatched() || cornerTwo.isMatched() )
 	{
-		minY = pos.y;
+		return false;
 	}
 
-	if (pos.x > maxX)
+	CvPoint posOne = cornerOne.getCornerPos();
+	CvPoint posTwo = cornerTwo.getCornerPos();
+
+	Corner::matchStatus status = (posOne.x == posTwo.x) ? Corner::Matched_X:
+														(posOne.y == posTwo.y) ? Corner::Matched_Y : 
+														Corner::Matched_No;
+
+	if (status == Corner::Matched_No)
 	{
-		maxX = pos.x;
+		return false;
 	}
 
-	if (pos.y > maxY)
+	if ( status == Corner::Matched_X && posOne.y == posTwo.y )
 	{
-		maxY = pos.y;
+		cornerOne.setMatchingStatus(Corner::Matched_XY);
+		cornerTwo.setMatchingStatus(Corner::Matched_XY);
+		return false;
 	}
+
+	if ( !matchPixel(cornerOne.getCornerPixel(), cornerTwo.getCornerPixel()) )
+	{
+		return false;
+	}
+
+	std::vector<CvScalar>& one = cornerOne.getAdjacentCirclePixels(imageOne);
+	std::vector<CvScalar>& two = cornerTwo.getAdjacentCirclePixels(imageTwo);
+
+	if ( !matchAdjacentPixels(one, two) )
+	{
+		return false;
+	}
+
+	switch (status)
+	{
+	case Corner::Matched_X:
+		{
+			int shift = posOne.y - posTwo.y;
+			int searchedDesc = cornersTwo.findDescription(Corners::Shift_Y,shift);
+			if ( searchedDesc )
+			{
+				cornerOne.setDescription(searchedDesc);
+				cornerTwo.setDescription(searchedDesc);
+				cornersOne.addShiftCounts(Corners::Shift_X,shift);// can delete
+				cornersTwo.addShiftCounts(Corners::Shift_Y,shift);
+			}else if ( matchPreciseCorner(imageOne, cornerOne, imageTwo, cornerTwo) )
+			{
+				++description;
+				//cornerOne.setShift(shift);
+				cornerTwo.setShift(shift);
+
+				cornerOne.setDescription(description);
+				cornerTwo.setDescription(description);
+				//std::cout << "match type: "<< description << "\n";
+				cornersOne.pushShift(Corners::Shift_Y,cornerOne);// can delete
+				cornersTwo.pushShift(Corners::Shift_Y,cornerTwo);
+			}else// No match
+			{
+				return false;
+			}
+			cornerOne.setMatchingStatus(Corner::Matched_X);//information of One maybe can be destroyed.
+			cornerTwo.setMatchingStatus(Corner::Matched_X);
+			break;
+		}
+	case Corner::Matched_Y:
+		{
+			int shift = posOne.x - posTwo.x;
+			int searchedDesc = cornersTwo.findDescription(Corners::Shift_X,shift);
+			if ( searchedDesc )
+			{
+				cornerOne.setDescription(searchedDesc);
+				cornerTwo.setDescription(searchedDesc);
+				cornersOne.addShiftCounts(Corners::Shift_X,shift);// can delete
+				cornersTwo.addShiftCounts(Corners::Shift_X,shift);
+			}else if ( matchPreciseCorner(imageOne, cornerOne, imageTwo, cornerTwo) )
+			{
+				++description;
+				//cornerOne.setShift(shift);
+				cornerTwo.setShift(shift);
+
+				cornerOne.setDescription(description);
+				cornerTwo.setDescription(description);
+
+				cornersOne.pushShift(Corners::Shift_X,cornerOne);// can delete
+				cornersTwo.pushShift(Corners::Shift_X,cornerTwo);
+			}else// No match
+			{
+				return false;
+			}
+			cornerOne.setMatchingStatus(Corner::Matched_X);//information of One maybe can be destroyed.
+			cornerTwo.setMatchingStatus(Corner::Matched_X);
+			break;
+		}
+	default:
+		break;
+	}
+
+	return false;
 }
 
 void matchCorners(const IplImage* imageOne, Corners& cornersOne,
-									const IplImage* imageTwo, Corners& cornersTwo)
+												const IplImage* imageTwo, Corners& cornersTwo)
 {
 	calTime cal(std::string(__FUNCTION__));
 
-	int minOneX = imageOne->width;
-	int minOneY = imageOne->height;
-	int maxOneX = 0, maxOneY = 0;
-
-	int minTwoX = imageTwo->width;
-	int minTwoY = imageTwo->height;
-	int maxTwoX = 0, maxTwoY = 0;
+	int description = 0;
 
 	int numCornersOne = cornersOne.getCornerSize();
 	int numCornersTwo = cornersTwo.getCornerSize();
@@ -76,68 +168,15 @@ void matchCorners(const IplImage* imageOne, Corners& cornersOne,
 		for (int j = 0; j < numCornersTwo; ++j)
 		{
 			Corner& cornerTwo = cornersTwo.getCorner(j);
-
-			if ( !cornerOne.isMatched() && !cornerTwo.isMatched()
-				&& cornerOne.getCornerPos().x == cornerTwo.getCornerPos().x
-				&& matchPixel(cornerOne.getCornerPixel(), cornerTwo.getCornerPixel())) // both on the same x axis
-			{
-				std::vector<CvScalar>& one = cornerOne.getAdjacentPixels(imageOne, KREGION);
-				std::vector<CvScalar>& two = cornerTwo.getAdjacentPixels(imageTwo, KREGION);
-
-				if (matchCorner(one, two))
-				{
-					if (cornerOne.getCornerPos().y == cornerTwo.getCornerPos().y)
-					{
-						cornerOne.setMatchingStatus(Corner::Matched_XY);
-						cornerTwo.setMatchingStatus(Corner::Matched_XY);
-					}
-					else
-					{
-						cornerOne.setMatchingStatus(Corner::Matched_X);
-						cornerTwo.setMatchingStatus(Corner::Matched_X);
-						getMinAndMax(cornerOne, minOneX, minOneY, maxOneX, maxOneY);
-						getMinAndMax(cornerTwo, minTwoX, minTwoY, maxTwoX, maxTwoY);
-					}
-				}
-			}
-
-			if ( !cornerOne.isMatched() && !cornerTwo.isMatched()
-				&& cornerOne.getCornerPos().y == cornerTwo.getCornerPos().y
-				&& matchPixel(cornerOne.getCornerPixel(), cornerTwo.getCornerPixel())) // both on the same y axis
-			{
-				std::vector<CvScalar>& one = cornerOne.getAdjacentPixels(imageOne, KREGION);
-				std::vector<CvScalar>& two = cornerTwo.getAdjacentPixels(imageTwo, KREGION);
-
-				if (matchCorner(one, two))
-				{
-					cornerOne.setMatchingStatus(Corner::Matched_Y);
-					cornerTwo.setMatchingStatus(Corner::Matched_Y);
-
-					getMinAndMax(cornerOne, minOneX, minOneY, maxOneX, maxOneY);
-					getMinAndMax(cornerTwo, minTwoX, minTwoY, maxTwoX, maxTwoY);
-				}
-			}
+			matchCorner(imageOne, cornerOne, cornersOne, 
+									imageTwo, cornerTwo, cornersTwo,
+									description );
 		}
 	}
-
-	CvRect rect;
-	//minOneY -= 20;
-	rect.x = minOneX;
-	rect.y = minOneY;
-	rect.width = maxOneX - minOneX;
-	rect.height= maxOneY - minOneY;
-	cornersOne.setSimilarRect(rect);
-
-	//maxTwoY += 20;
-	rect.x = minTwoX;
-	rect.y = minTwoY;
-	rect.width = maxTwoX - minTwoX;
-	rect.height= maxTwoY - minTwoY;
-	cornersTwo.setSimilarRect(rect);
 }
 
 void matchRect(IplImage* imageOne, Corners& cornersOne,
-			   IplImage* imageTwo, Corners& cornersTwo)
+							IplImage* imageTwo, Corners& cornersTwo)
 {
 	CvRect rect = cornersOne.getSimilarRect();
 	if (rect.width <= 0 )
